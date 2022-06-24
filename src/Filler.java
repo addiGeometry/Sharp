@@ -1,17 +1,21 @@
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
-public class Filler {
-    private OutputStream os;
-    private DataOutputStream dos;
+public class Filler implements Runnable{
     private final int port;
 
-    private Socket socket = null;
+    private static final String PROZESSORDIR = System.getProperty("user.dir") + "/data/toProzess/";
 
+    private static int tasknumber = 0;
+
+    private OutputStream os;
+    private DataOutputStream dos;
+
+    private Socket socket = null;
     private ServerSocket srvSocket=null;
 
 
@@ -23,13 +27,27 @@ public class Filler {
             -100, -12
     };
 
-    public Filler(String filepath, int port) throws IOException {
+    public Filler(int port) throws IOException {
         this.port = port;
-        os = new FileOutputStream(filepath);
-        dos = new DataOutputStream(os);
-
         //Filler acts as a Server
         //socket = getSocket();
+    }
+
+    public void fill() throws IOException{
+        File cmdFile = new File("file" + tasknumber + ".txt");
+
+        this.os = new FileOutputStream(cmdFile);
+        this.dos = new DataOutputStream(os);
+
+        //TODO
+        //Aus TCP ausgelesene Fills
+
+        dummyfill();
+        this.dos.close();
+        this.os.close();
+
+        Files.move(Path.of(cmdFile.getAbsolutePath()),Path.of(PROZESSORDIR+"toProzess"+tasknumber+".txt"), StandardCopyOption.REPLACE_EXISTING);
+        tasknumber++;
     }
 
     /**
@@ -43,15 +61,9 @@ public class Filler {
 
     public void dummyfill() throws IOException{
         for(int i=0; i<dummyFillers.length; i++){
-            if(i % 2 == 0) {
                 dos.writeChar('+');
-                dos.writeChar(' ');
                 dos.writeInt(dummyFillers[i]);
-                dos.writeChar(' ');
-            }
-            else{
                 dos.writeInt(dummyFillers[i]);
-            }
         }
     }
 
@@ -87,4 +99,9 @@ public class Filler {
         private void kill() throws IOException{
             this.srvSocket.close();
         }
+
+    @Override
+    public void run() {
+
+    }
 }
