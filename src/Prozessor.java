@@ -3,14 +3,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Prozessor implements Runnable {
     private boolean kill;
 
-    private final static String PROZDIR = System.getProperty("user.id") + "/data/toProzess";
+    private final static String PROZDIR = System.getProperty("user.home") + "/data/toProzess";
     private final static File motherfolder = new File(PROZDIR);
+
+    public Prozessor(){
+        this.kill = false;
+    }
     /**
      * Der Prozessor wertet Ausdrücke aus einer Input-File als Addition
      * aus und schreibt Logeinträge nach dem Schema:
@@ -22,7 +29,7 @@ public class Prozessor implements Runnable {
      *
      */
 
-    public int[] auswerten(String filepath) throws IOException, EOFException, BadFillException{
+    public int[] auswerten(File filepath) throws IOException, EOFException, BadFillException{
         ArrayList<Integer> inputs = new ArrayList<>();
         FileInputStream in = new FileInputStream(filepath);
         DataInputStream din = new DataInputStream(in);
@@ -62,9 +69,19 @@ public class Prozessor implements Runnable {
     public void run(){
         while(!this.kill){
             try {
-                List<File> list = Files.walk(Path.of(PROZDIR));
+                Thread.sleep(100);
+                List<File> toProzess = Arrays.asList(new File(PROZDIR).listFiles());
+
+               for(File file : toProzess){
+                   auswerten(file);
+               }
+
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (BadFillException e) {
+               throw new RuntimeException(e);
+           } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }
