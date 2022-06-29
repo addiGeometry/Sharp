@@ -1,3 +1,5 @@
+package sharp;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,7 +10,8 @@ import java.nio.file.StandardCopyOption;
 public class Filler implements Runnable{
     private final int port;
 
-    private static final String PROZESSORDIR = System.getProperty("user.dir") + "/data/toProzess/";
+    public static final String WORK_DIR = System.getProperty("user.dir");
+    private static final String FILL_DIR = WORK_DIR + "/data/toProzess/";
 
     private static int tasknumber = 0;
 
@@ -29,7 +32,7 @@ public class Filler implements Runnable{
 
     public Filler(int port) throws IOException {
         this.port = port;
-        //Filler acts as a Server
+        //sharp.Filler acts as a Server
         //socket = getSocket();
     }
 
@@ -46,7 +49,7 @@ public class Filler implements Runnable{
         this.dos.close();
         this.os.close();
 
-        Files.move(Path.of(cmdFile.getAbsolutePath()),Path.of(PROZESSORDIR+"toProzess"+tasknumber+".txt"), StandardCopyOption.REPLACE_EXISTING);
+        Files.move(Path.of(cmdFile.getAbsolutePath()),Path.of(FILL_DIR+"toProzess"+tasknumber+".txt"), StandardCopyOption.REPLACE_EXISTING);
         tasknumber++;
     }
 
@@ -61,8 +64,7 @@ public class Filler implements Runnable{
 
     public void dummyfill() throws IOException{
         for(int i=0; i<dummyFillers.length; i++){
-                dos.writeChar('+');
-                dos.writeInt(dummyFillers[i]);
+                if(i%2 == 0)dos.writeChar('+');
                 dos.writeInt(dummyFillers[i]);
         }
     }
