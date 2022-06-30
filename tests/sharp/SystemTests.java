@@ -30,11 +30,18 @@ public class SystemTests {
     public void verarbeiteEineFile() throws IOException, BadFillException {
         filler = new Filler(PORT);
         filler.dummyfill();
-
+        processor = new Processor();
         filler.fill();
         File auszuwerten = new File(PROZDIR+"/toProcess0.txt");
         FileInputStream dis = new FileInputStream(auszuwerten);
-        processor = new Processor();
+        for(PlusCommand cmd : PlusCommand.getCommandFromInputStream(dis)){
+            processor.auswerten(cmd);
+        }
+        dis.close();
+        filler.fill();
+        filler.dummyfill();
+        File auszuwerten2 = new File(PROZDIR+"/toProcess1.txt");
+        dis = new FileInputStream(auszuwerten2);
         for(PlusCommand cmd : PlusCommand.getCommandFromInputStream(dis)){
             processor.auswerten(cmd);
         }

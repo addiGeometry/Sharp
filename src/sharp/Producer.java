@@ -13,6 +13,7 @@ public class Producer implements Runnable{
     private boolean killed = false;
     private int port;
     private ArrayList<Integer> productions;
+    private boolean connected=false;
 
     public Producer(int port, ArrayList<Integer> productions){
         this.killed = false;
@@ -22,8 +23,8 @@ public class Producer implements Runnable{
     }
 
     public static void main(String[] args) {
-        if(args.length < 1){
-            System.err.println("usage: @param1 port");
+        if(args.length < 1 || args.length > 2){
+            System.err.println("usage: @param1 port, @param2 producer count");
             System.exit(1);
         }
         int anzahl = 0;
@@ -37,12 +38,6 @@ public class Producer implements Runnable{
         for(int i=0; i<anzahl;i++){
             ArrayList<Integer> productions = Productions.generateProductions();
             Producer aufgabe = new Producer(Integer.parseInt(args[0]), productions);
-            try{
-                aufgabe.initializeSocket();
-            } catch (IOException e) {
-                System.err.println(e.getLocalizedMessage());
-                System.exit(1);
-            }
             arbeiter.add(new Thread(aufgabe));
         }
         for(Thread t : arbeiter) t.start();
@@ -67,9 +62,16 @@ public class Producer implements Runnable{
     @Override
     public void run() {
         try{
+            while(!connected){
+                try {
+                    this.initializeSocket();
+                    Thread.sleep(500);
+                }
+                catch (IOException e){}
+            }
             this.produce();
-        } catch (IOException e) {
-            System.err.println("Error: bad gateway");
+        } catch (IOException | InterruptedException e){
+            System.err.println("Error: Bad Gateway");
             System.exit(1);
         }
     }
@@ -81,6 +83,7 @@ public class Producer implements Runnable{
     public void initializeSocket() throws IOException{
         srvSocket = tcpServer.getSocket();
         dout = new DataOutputStream(srvSocket.getOutputStream());
+        this.connected = true;
     }
     private class TCPServer {
         private ServerSocket srvSocket = null;

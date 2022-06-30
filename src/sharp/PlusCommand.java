@@ -13,7 +13,7 @@ class PlusCommand{
 
     static ArrayList<PlusCommand> getCommandFromInputStream(FileInputStream is) throws IOException, BadFillException {
             DataInputStream din = new DataInputStream(is);
-            ArrayList<PlusCommand> commands = new ArrayList<PlusCommand>();
+            ArrayList<PlusCommand> commands = new ArrayList<>();
             try{
                 while(true){
                     char operator = din.readChar();
@@ -24,6 +24,7 @@ class PlusCommand{
                 }
             }
             catch(EOFException e) {}
+            din.close();
             return commands;
     }
 

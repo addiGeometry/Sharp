@@ -14,6 +14,8 @@ import static sharp.Filler.WORK_DIR;
 
 public class Processor implements Runnable {
     private boolean kill;
+
+    private int processnr;
     private final static String PROZDIR = WORK_DIR + "/data/toProcess";
 
     public Processor() {
@@ -44,8 +46,7 @@ public class Processor implements Runnable {
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy HH:mm:ss:mm");
         Date resultdate = new Date(time);
 
-        System.out.println("" + dateFormat.format(resultdate) + ": " + summand1 + space + "+" + space + summand2 + " = " + ergebnis);
-        this.kill();
+        System.out.println(Thread.currentThread() + ": " + dateFormat.format(resultdate) + "-> " + summand1 + space + "+" + space + summand2 + " = " + ergebnis);
     }
 
     public void kill() {
@@ -58,18 +59,14 @@ public class Processor implements Runnable {
             try (Stream<Path> stream = Files.list(Path.of(PROZDIR))) {
                 filePaths = stream.collect(Collectors.toList());
             }
-            if (filePaths.size() != 0) {
-                for (Path pfad : filePaths) {
+            for (Path pfad : filePaths) {
                     FileInputStream fis = new FileInputStream(String.valueOf(pfad));
-                    do {
-                        ArrayList<PlusCommand> plusCommands = PlusCommand.getCommandFromInputStream(fis);
-                        for (PlusCommand toProcess : plusCommands) {
-                            this.auswerten(toProcess);
-                        }
-                    } while (fis.available() > 0);
+                    ArrayList<PlusCommand> plusCommands = PlusCommand.getCommandFromInputStream(fis);
+                    for (PlusCommand toProcess : plusCommands) {
+                        this.auswerten(toProcess);
+                    }
                     fis.close();
                     Files.delete(pfad);
-                }
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -84,7 +81,7 @@ public class Processor implements Runnable {
     public void run() {
         while (!this.kill) {
             try {
-                Thread.sleep(100);
+                Thread.sleep(500);
                 this.tasklisteAuswerten();
             } catch (InterruptedException e) {
                 //ignore
