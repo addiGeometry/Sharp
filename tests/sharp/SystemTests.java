@@ -1,50 +1,65 @@
 package sharp;
 
-import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.util.ArrayList;
+
 import static sharp.Filler.WORK_DIR;
 
 public class SystemTests {
-    private Prozessor prozessor;
+    private Producer producer;
+    private Processor processor;
     private Filler filler;
 
     private static final int PORT = 2222;
 
-    private final static String PROZDIR = WORK_DIR + "/data/toProzess";
+    private final static String PROZDIR = WORK_DIR + "/data/toProcess";
 
-    public void initializeFillNPro() throws IOException{
-        filler = new Filler(4444);
-        prozessor = new Prozessor();
-    }
 
     @Test
     public void testFill() throws IOException {
-        initializeFillNPro();
+        filler = new Filler(PORT);
+        filler.dummyfill();
         filler.fill();
     }
 
     @Test
     public void verarbeiteEineFile() throws IOException, BadFillException {
-        this.initializeFillNPro();
+        filler = new Filler(PORT);
+        filler.dummyfill();
+
         filler.fill();
-        File auszuwerten = new File(PROZDIR+"/toProzess0.txt");
+        File auszuwerten = new File(PROZDIR+"/toProcess0.txt");
         FileInputStream dis = new FileInputStream(auszuwerten);
+        processor = new Processor();
         for(PlusCommand cmd : PlusCommand.getCommandFromInputStream(dis)){
-            prozessor.auswerten(cmd);
+            processor.auswerten(cmd);
         }
     }
 
+    @Test
+    public void milliTest() throws IOException {
+        ArrayList<Integer> productions = new ArrayList<>();
+        for(int i=0; i<10; i++){
+            productions.add(i);
+        }
+        producer = new Producer(PORT, productions);
+        new Thread(filler);
+        producer.initializeSocket();
+
+        processor = new Processor();
+
+        producer.produce();
+        filler.fill();
+        processor.tasklisteAuswerten();
+    }
 
     @Test
-    public void betafillUndAuswerten() throws IOException, BadFillException {
-        this.initializeFillNPro();
-        filler.fill();
-        new Thread(prozessor).start();
+    public void historicTest(){
+        processor = new Processor();
+        processor.tasklisteAuswerten();
     }
 }
