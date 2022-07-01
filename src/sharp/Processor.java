@@ -15,7 +15,7 @@ import static sharp.Filler.WORK_DIR;
 public class Processor implements Runnable {
     private boolean kill;
 
-    private int processnr;
+    private static final int SLEEPTIME = 10;
     private final static String PROZDIR = WORK_DIR + "/data/toProcess";
 
     public Processor() {
@@ -46,7 +46,7 @@ public class Processor implements Runnable {
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy HH:mm:ss:mm");
         Date resultdate = new Date(time);
 
-        System.out.println(Thread.currentThread() + ": " + dateFormat.format(resultdate) + "-> " + summand1 + space + "+" + space + summand2 + " = " + ergebnis);
+        System.out.println(Thread.currentThread() + ": " + dateFormat.format(resultdate) + " -> " + summand1 + space + "+" + space + summand2 + " = " + ergebnis);
     }
 
     public void kill() {
@@ -55,6 +55,7 @@ public class Processor implements Runnable {
 
     public void tasklisteAuswerten() {
         try {
+            Thread.sleep(SLEEPTIME);
             List<Path> filePaths;
             try (Stream<Path> stream = Files.list(Path.of(PROZDIR))) {
                 filePaths = stream.collect(Collectors.toList());
@@ -73,6 +74,8 @@ public class Processor implements Runnable {
         } catch (IOException e) {
             System.out.println("taking a nap");
         } catch (BadFillException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }

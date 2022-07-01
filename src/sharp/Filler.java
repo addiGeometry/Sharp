@@ -31,7 +31,7 @@ public class Filler implements Runnable{
     private Socket socket =null;
 
     //Zeit in ms, die der Filler im jeweiligen Lese- oder Schreibzustand verbringt
-    private static long TASKTIME = 2000000000l;
+    private static long TASKTIME = 5000l;
 
     private ArrayList<Integer> fillTasks = new ArrayList<Integer>();
 
@@ -56,27 +56,21 @@ public class Filler implements Runnable{
             System.exit(1);
         }
         Filler filler = new Filler(Integer.parseInt(args[0]));
-        try{
-            filler.initializeSocket();
-            new Thread(filler);
-        } catch (IOException e) {
-            System.err.println(e.getLocalizedMessage());
-            System.exit(1);
-        }
         new Thread(filler).start();
     }
 
-    public void readTasks() throws IOException {
+    public void readTasks() throws IOException, EndException {
         System.out.println("reading...");
         if(this.din == null) throw new IOException();
-        long time = System.nanoTime();
-        while((System.nanoTime() - time) <= TASKTIME){
-            try{
+        long time = System.currentTimeMillis();
+        try{
+            while((System.currentTimeMillis() - time) <= TASKTIME){
                 fillTasks.add(din.readInt());
                 fillTasks.add(din.readInt());
             }
-            catch (EOFException e){
-            }
+        }
+        catch (EOFException e){
+            if(fillTasks.size()==0) throw new EndException();
         }
         din.close();
     }
@@ -89,16 +83,21 @@ public class Filler implements Runnable{
         File cmdFile = new File("file" + tasknumber + ".txt");
         this.os = new FileOutputStream(cmdFile);
         this.dos = new DataOutputStream(os);
-        int c=0;
-        long time = System.nanoTime();
+        int c=fillTasks.size();
+        long time = System.currentTimeMillis();
+        boolean should = true;
         for(int i : fillTasks){
-            if( ((System.nanoTime()-time) <= TASKTIME) || (c%2!=1)){
+            if( should || (c%2==1)){
+                long second = System.currentTimeMillis();
+                long diff = second - time;
+                should = diff <= TASKTIME;
                 if(c%2 == 0) this.dos.writeChar('+');
                 this.dos.writeInt(i);
-                c++;
+                c--;
             }
+            if(!should && (c%2!=1)) break;
         }
-        for(int i=c-1; i>=0; i--){
+        for(int i=fillTasks.size()-1; i>=c; i--){
             fillTasks.remove(i);
         }
         this.dos.close();
@@ -190,12 +189,14 @@ public class Filler implements Runnable{
     public void run() {
         while(!killed){
             try {
+                this.initializeSocket();
                 this.readTasks();
                 this.fill();
-                this.socket = tcpClient.getSocket();
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 System.err.println("Error: Bad Gateway");
                 System.exit(1);
+            } catch (EndException e) {
             }
         }
     }

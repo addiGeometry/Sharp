@@ -44,7 +44,7 @@ public class SystemTests {
         filler.fill();
         File auszuwerten3 = new File(PROZDIR+"/toProcess2.txt");
         dis = new FileInputStream(auszuwerten3);
-        processor.tasklisteAuswerten();
+        //processor.tasklisteAuswerten();
         dis.close();
     }
 
