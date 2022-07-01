@@ -34,17 +34,18 @@ public class SystemTests {
         filler.fill();
         File auszuwerten = new File(PROZDIR+"/toProcess0.txt");
         FileInputStream dis = new FileInputStream(auszuwerten);
-        for(PlusCommand cmd : PlusCommand.getCommandFromInputStream(dis)){
-            processor.auswerten(cmd);
-        }
         dis.close();
-        filler.fill();
         filler.dummyfill();
+        filler.fill();
         File auszuwerten2 = new File(PROZDIR+"/toProcess1.txt");
         dis = new FileInputStream(auszuwerten2);
-        for(PlusCommand cmd : PlusCommand.getCommandFromInputStream(dis)){
-            processor.auswerten(cmd);
-        }
+        dis.close();
+        filler.dummyfill();
+        filler.fill();
+        File auszuwerten3 = new File(PROZDIR+"/toProcess2.txt");
+        dis = new FileInputStream(auszuwerten3);
+        processor.tasklisteAuswerten();
+        dis.close();
     }
 
     @Test
