@@ -15,6 +15,10 @@ public class Producer implements Runnable{
     private ArrayList<Integer> productions;
     private boolean connected=false;
 
+    /**
+     * Producer versuchen über TCP mit einem Filler zu connecten und
+     * generieren zufällige Aufgaben für den Prozessor.
+     * */
     public Producer(int port, ArrayList<Integer> productions){
         this.killed = false;
         this.port = port;
@@ -23,6 +27,7 @@ public class Producer implements Runnable{
     }
 
     public static void main(String[] args) {
+        //args[1] ist die Anzahl der Producer, args[0] der Port
         if(args.length < 1 || args.length > 2){
             System.err.println("usage: @param1 port, @param2 producer count");
             System.exit(1);
@@ -35,6 +40,7 @@ public class Producer implements Runnable{
             anzahl = Integer.parseInt(args[1]);
         }
         ArrayList<Thread> arbeiter = new ArrayList<>();
+        //Generiere Aufgaben und starte alle Threads, die versuchen zu senden.
         for(int i=0; i<anzahl;i++){
             ArrayList<Integer> productions = Productions.generateProductions();
             Producer aufgabe = new Producer(Integer.parseInt(args[0]), productions);
@@ -45,33 +51,39 @@ public class Producer implements Runnable{
     }
 
     public void produce() throws IOException{
+        if(this.srvSocket == null) throw new IOException();
+        //Schreibe auf TCP
         System.out.println("producing...");
         for(int i : productions){
             dout.writeInt(i);
         }
         System.out.println("Producer "+Thread.currentThread()+" has finished.");
-        this.kill();
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///                                          Thread-Methods                                              ///
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public void kill(){
+    public void kill() throws IOException {
+        this.dout.close();
+        this.srvSocket = null;
+        this.tcpServer.kill();
         this.killed = true;
     }
 
     @Override
     public void run() {
+        //Routine. Producer "Sterben" nach Auftrag :(
         try{
             while(!connected){
                 try {
                     this.initializeSocket();
-                    Thread.sleep(500);
+                    Thread.sleep(50);
                 }
                 catch (IOException e){}
             }
             this.produce();
+            this.kill();
         } catch (IOException | InterruptedException e){
-            System.err.println("Error: Bad Gateway");
+            System.err.println("Error: Bad TCP Connection");
             System.exit(1);
         }
     }
@@ -84,6 +96,7 @@ public class Producer implements Runnable{
         srvSocket = tcpServer.getSocket();
         dout = new DataOutputStream(srvSocket.getOutputStream());
         this.connected = true;
+        System.out.println("prod connected");
     }
     private class TCPServer {
         private ServerSocket srvSocket = null;
@@ -148,7 +161,7 @@ public class Producer implements Runnable{
             int vz=1;
             for(int i=0; i<20; i++){
                 if(Math.random() < 0.49) vz=-1;
-                productions.add(ThreadLocalRandom.current().nextInt(-300, 300 + 1));
+                productions.add(ThreadLocalRandom.current().nextInt(-777, 777 + 1));
             }
             return productions;
         }

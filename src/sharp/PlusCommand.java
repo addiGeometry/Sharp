@@ -11,6 +11,8 @@ class PlusCommand{
         this.zweiterSummand = zweiter;
     }
 
+    /*Diese Klasse behandelt das Auslesen aus den einzelnen, vom Prozessor gefundenen Files via eines
+    FileInputStreams */
     static ArrayList<PlusCommand> getCommandFromInputStream(FileInputStream is) throws IOException, BadFillException {
             DataInputStream din = new DataInputStream(is);
             ArrayList<PlusCommand> commands = new ArrayList<>();
